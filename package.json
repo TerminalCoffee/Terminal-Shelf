@@ -1,0 +1,30 @@
+{
+  "name": "terminal-shelf-a",
+  "version": "1.0.0",
+  "description": "Este diretório contém a documentação inicial do projeto.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "node --watch --import=tsx src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TerminalCoffee/Terminal-Shelf.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/TerminalCoffee/Terminal-Shelf/issues"
+  },
+  "homepage": "https://github.com/TerminalCoffee/Terminal-Shelf#readme",
+  "devDependencies": {
+    "@types/node": "^26.6.0",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}
