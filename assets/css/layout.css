@@ -1,0 +1,7 @@
+@layer layout {
+  .flow > * + * { margin-block-start: var(--flow, 1em); }
+  .stack * + * { margin-block-start: var(--stack, var(--space-stack)); }
+  .cluster { display: flex; flex-wrap: wrap; gap: var(--cluster, var(--space-cluster)); align-items: center; }
+  .center { box-sizing: content-box; max-inline-size: 65ch; margin-inline: auto; padding-inline: var(--space-gutter); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr)); gap: var(--grid-gap, var(--space-6)); }
+}

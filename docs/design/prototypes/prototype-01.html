@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Shelf</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        :root {
+            --paper: #F7F5F0;
+            --ink: #1A1A1A;
+            --ink-muted: #4A4A4A;
+            --shelf-wood: #8B6F47;
+            --accent-reading: #D4A541;
+            --accent-planned: #5C6B7A;
+            --accent-finished: #6B8E5C;
+            --accent-onhold: #9B8A7A;
+            --accent-action: #C45A3D;
+            --spine-width: 32px;
+            --spine-padding: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            line-height: 1.6;
+            font-size: 15px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(139, 111, 71, 0.2);
+            background: rgba(247, 245, 240, 0.95);
+            backdrop-filter: blur(8px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            gap: 1rem;
+        }
+
+        .app-name {
+            font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--ink);
+            flex-shrink: 0;
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.625rem 2.5rem 0.625rem 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9375rem;
+            border: 1px solid rgba(139, 111, 71, 0.3);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            color: var(--ink);
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-action);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--ink-muted);
+            font-size: 1.25rem;
+            pointer-events: none;
+        }
+
+        .quick-add-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.625rem 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: white;
+            background: var(--accent-action);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .quick-add-btn:hover {
+            background: #a64a33;
+            transform: translateY(-1px);
+        }
+
+        .quick-add-btn:active {
+            transform: translateY(0);
+        }
+
+        .quick-add-btn .material-symbols-rounded {
+            font-size: 1.25rem;
+        }
+
+        /* Main layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            border-right: 1px solid rgba(139, 111, 71, 0.2);
+            background: rgba(247, 245, 240, 0.6);
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--ink);
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.25rem;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--ink-muted);
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(139, 111, 71, 0.1);
+            color: var(--ink);
+        }
+
+        .sidebar-item.active {
+            background: rgba(196, 90, 61, 0.12);
+            color: var(--ink);
+            font-weight: 500;
+        }
+
+        .sidebar-item .material-symbols-rounded {
+            font-size: 1.125rem;
+        }
+
+        /* Content area */
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .content-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(139, 111, 71, 0.2);
+            flex-shrink: 0;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 0.375rem;
+            background: rgba(139, 111, 71, 0.1);
+            padding: 0.25rem;
+            border-radius: 4px;
+        }
+
+        .view-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 0.875rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.875rem;
+            color: var(--ink-muted);
+            background: transparent;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .view-btn:hover {
+            color: var(--ink);
+        }
+
+        .view-btn.active {
+            background: rgba(255, 255, 255, 0.7);
+            color: var(--ink);
+            font-weight: 500;
+        }
+
+        .view-btn .material-symbols-rounded {
+            font-size: 1.125rem;
+        }
+
+        .shelf-count {
+            color: var(--ink-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Shelves view */
+        .shelves-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .shelf {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .shelf-label {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--ink);
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--shelf-wood);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .shelf-books {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            min-height: 140px;
+            padding: 0.5rem 0.25rem;
+            background: linear-gradient(to bottom, rgba(139, 111, 71, 0.08) 0%, rgba(139, 111, 71, 0.15) 100%);
+            border-radius: 2px;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .book-spine {
+            width: var(--spine-width);
+            min-width: var(--spine-width);
+            height: 120px;
+            cursor: pointer;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            border-radius: 1px;
+            padding: var(--spine-padding) 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 0.375rem;
+            transition: all 0.2s ease;
+            position: relative;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .book-spine:hover {
+            transform: translateY(-4px);
+            box-shadow: 3px 6px 8px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .book-spine.planned {
+            background: var(--accent-planned);
+            color: white;
+        }
+
+        .book-spine.reading {
+            background: var(--accent-reading);
+            color: var(--ink);
+        }
+
+        .book-spine.finished {
+            background: var(--accent-finished);
+            color: white;
+        }
+
+        .book-spine.onhold {
+            background: var(--accent-onhold);
+            color: white;
+        }
+
+        .book-title-spine {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-height: 85px;
+            word-break: break-word;
+        }
+
+        .book-author-spine {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-size: 0.625rem;
+            opacity: 0.85;
+            line-height: 1.1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-height: 70px;
+        }
+
+        /* Detail drawer */
+        .detail-drawer {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 420px;
+            max-width: 90vw;
+            height: 100vh;
+            background: var(--paper);
+            border-left: 1px solid rgba(139, 111, 71, 0.3);
+            box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .detail-drawer.active {
+            right: 0;
+        }
+
+        .drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(139, 111, 71, 0.2);
+        }
+
+        .drawer-title {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--ink-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.375rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(139, 111, 71, 0.1);
+            color: var(--ink);
+        }
+
+        .drawer-content {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            padding: 0.625rem 0.75rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.875rem;
+            border: 1px solid rgba(139, 111, 71, 0.3);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            color: var(--ink);
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent-action);
+            background: white;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: 'DM Sans', sans-serif;
+            line-height: 1.6;
+        }
+
+        .save-btn {
+            padding: 0.75rem 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: white;
+            background: var(--accent-action);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 0.5rem;
+        }
+
+        .save-btn:hover {
+            background: #a64a33;
+        }
+
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 999;
+        }
+
+        .drawer-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* List view */
+        .list-container {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .list-container.active {
+            display: block;
+        }
+
+        .shelves-container.hidden {
+            display: none;
+        }
+
+        .list-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .list-table thead {
+            background: rgba(139, 111, 71, 0.12);
+        }
+
+        .list-table th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--ink);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .list-table td {
+            padding: 0.75rem 1rem;
+            border-top: 1px solid rgba(139, 111, 71, 0.15);
+            font-size: 0.875rem;
+            color: var(--ink);
+        }
+
+        .list-table tbody tr:hover {
+            background: rgba(139, 111, 71, 0.08);
+            cursor: pointer;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.625rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-planned {
+            background: rgba(92, 107, 122, 0.15);
+            color: var(--accent-planned);
+        }
+
+        .status-reading {
+            background: rgba(212, 165, 65, 0.2);
+            color: var(--accent-reading);
+        }
+
+        .status-finished {
+            background: rgba(107, 142, 92, 0.15);
+            color: var(--accent-finished);
+        }
+
+        .status-onhold {
+            background: rgba(155, 138, 122, 0.15);
+            color: var(--accent-onhold);
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-wrap: wrap;
+                padding: 0.75rem;
+            }
+
+            .app-name {
+                font-size: 1.25rem;
+            }
+
+            .search-container {
+                order: 3;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .sidebar {
+                width: 240px;
+            }
+
+            .shelves-container {
+                padding: 1rem;
+            }
+
+            .detail-drawer {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1 class="app-name">Terminal Shelf</h1>
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search books...">
+            <span class="material-symbols-rounded search-icon">search</span>
+        </div>
+        <button class="quick-add-btn" id="quickAddBtn">
+            <span class="material-symbols-rounded">add</span>
+            Add book
+        </button>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-header">Library</div>
+                <div class="sidebar-item active" id="allBooks">
+                    <span class="material-symbols-rounded">library_books</span>
+                    All books
+                </div>
+                <div class="sidebar-item" id="plannedBooks">
+                    <span class="material-symbols-rounded">bookmark</span>
+                    Planned
+                </div>
+                <div class="sidebar-item" id="readingBooks">
+                    <span class="material-symbols-rounded">auto_stories</span>
+                    Reading
+                </div>
+                <div class="sidebar-item" id="finishedBooks">
+                    <span class="material-symbols-rounded">done_all</span>
+                    Finished
+                </div>
+                <div class="sidebar-item" id="onHoldBooks">
+                    <span class="material-symbols-rounded">pause</span>
+                    On hold
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-header">Shelves</div>
+                <div class="sidebar-item" id="defaultShelf">
+                    <span class="material-symbols-rounded">shelves</span>
+                    Main shelf
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-header">Collections</div>
+                <div class="sidebar-item">
+                    <span class="material-symbols-rounded">folder_special</span>
+                    Favorites
+                </div>
+            </div>
+        </aside>
+
+        <!-- Content -->
+        <main class="content">
+            <div class="content-header">
+                <div class="view-toggle">
+                    <button class="view-btn active" id="shelfViewBtn">
+                        <span class="material-symbols-rounded">shelves</span>
+                        Shelves
+                    </button>
+                    <button class="view-btn" id="listViewBtn">
+                        <span class="material-symbols-rounded">list</span>
+                        List
+                    </button>
+                </div>
+                <div class="shelf-count" id="shelfCount">0 books</div>
+            </div>
+
+            <!-- Shelves View -->
+            <div class="shelves-container" id="shelvesContainer">
+                <div class="shelf" data-shelf="main-shelf">
+                    <div class="shelf-label">
+                        <span>Main shelf</span>
+                    </div>
+                    <div class="shelf-books" id="mainShelfBooks"></div>
+                </div>
+            </div>
+
+            <!-- List View -->
+            <div class="list-container" id="listContainer">
+                <table class="list-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Reading state</th>
+                            <th>Shelf</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listTableBody"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Detail Drawer -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+    <div class="detail-drawer" id="detailDrawer">
+        <div class="drawer-header">
+            <h2 class="drawer-title" id="drawerTitle">Add book</h2>
+            <button class="close-btn" id="closeDrawerBtn">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+        </div>
+        <div class="drawer-content">
+            <input type="hidden" id="bookId">
+            
+            <div class="form-group">
+                <label class="form-label" for="titleInput">Title</label>
+                <input type="text" class="form-input" id="titleInput" placeholder="Book title" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="authorInput">Author</label>
+                <input type="text" class="form-input" id="authorInput" placeholder="Author name">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="isbnInput">ISBN</label>
+                <input type="text" class="form-input" id="isbnInput" placeholder="ISBN">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="publisherInput">Publisher</label>
+                <input type="text" class="form-input" id="publisherInput" placeholder="Publisher">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="yearInput">Year</label>
+                <input type="number" class="form-input" id="yearInput" placeholder="Publication year">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="readingStateSelect">Reading state</label>
+                <select class="form-select" id="readingStateSelect">
+                    <option value="Planned">Planned</option>
+                    <option value="Reading">Reading</option>
+                    <option value="Finished">Finished</option>
+                    <option value="OnHold">On hold</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="shelfSelect">Shelf</label>
+                <select class="form-select" id="shelfSelect">
+                    <option value="Main shelf">Main shelf</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="descriptionInput">Description</label>
+                <textarea class="form-textarea" id="descriptionInput" placeholder="Optional description..."></textarea>
+            </div>
+
+            <button class="save-btn" id="saveBtn">Save book</button>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'terminal-shelf-books';
+
+        let books = [];
+        let currentBookId = null;
+
+        function loadBooks() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    books = JSON.parse(data);
+                }
+            } catch (e) {
+                books = [];
+            }
+        }
+
+        function saveBooks() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+            } catch (e) {
+                console.error('Failed to save books:', e);
+            }
+        }
+
+        function generateId() {
+            return 'book_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function renderShelves() {
+            const mainShelfBooks = document.getElementById('mainShelfBooks');
+            mainShelfBooks.innerHTML = '';
+
+            const shelfBooks = books.filter(b => b.shelf === 'Main shelf');
+
+            shelfBooks.forEach(book => {
+                const spine = document.createElement('div');
+                spine.className = 'book-spine ' + book.readingState.toLowerCase().replace('onhold', 'onhold');
+                spine.dataset.bookId = book.id;
+                spine.title = book.title + (book.author ? ' by ' + book.author : '');
+
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'book-title-spine';
+                titleDiv.textContent = book.title || 'Untitled';
+
+                const authorDiv = document.createElement('div');
+                authorDiv.className = 'book-author-spine';
+                authorDiv.textContent = book.author || '';
+
+                spine.appendChild(titleDiv);
+                spine.appendChild(authorDiv);
+                mainShelfBooks.appendChild(spine);
+
+                spine.addEventListener('click', () => {
+                    openDrawer(book.id);
+                });
+            });
+
+            document.getElementById('shelfCount').textContent = shelfBooks.length + ' books';
+        }
+
+        function renderList() {
+            const tbody = document.getElementById('listTableBody');
+            tbody.innerHTML = '';
+
+            const shelfBooks = books.filter(b => b.shelf === 'Main shelf');
+
+            shelfBooks.forEach(book => {
+                const tr = document.createElement('tr');
+                tr.dataset.bookId = book.id;
+
+                tr.innerHTML = `
+                    <td>${escapeHtml(book.title || 'Untitled')}</td>
+                    <td>${escapeHtml(book.author || '')}</td>
+                    <td><span class="status-badge status-${book.readingState.toLowerCase().replace('onhold', 'onhold')}">${formatReadingState(book.readingState)}</span></td>
+                    <td>${escapeHtml(book.shelf)}</td>
+                `;
+
+                tr.addEventListener('click', () => {
+                    openDrawer(book.id);
+                });
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('shelfCount').textContent = shelfBooks.length + ' books';
+        }
+
+        function formatReadingState(state) {
+            if (state === 'OnHold') return 'On hold';
+            return state;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function openDrawer(bookId) {
+            const book = books.find(b => b.id === bookId);
+            if (book) {
+                currentBookId = bookId;
+                document.getElementById('drawerTitle').textContent = book.title || 'Edit book';
+                document.getElementById('bookId').value = book.id;
+                document.getElementById('titleInput').value = book.title || '';
+                document.getElementById('authorInput').value = book.author || '';
+                document.getElementById('isbnInput').value = book.isbn || '';
+                document.getElementById('publisherInput').value = book.publisher || '';
+                document.getElementById('yearInput').value = book.year || '';
+                document.getElementById('readingStateSelect').value = book.readingState || 'Planned';
+                document.getElementById('shelfSelect').value = book.shelf || 'Main shelf';
+                document.getElementById('descriptionInput').value = book.description || '';
+            } else {
+                currentBookId = null;
+                document.getElementById('drawerTitle').textContent = 'Add book';
+                document.getElementById('bookId').value = '';
+                document.getElementById('titleInput').value = '';
+                document.getElementById('authorInput').value = '';
+                document.getElementById('isbnInput').value = '';
+                document.getElementById('publisherInput').value = '';
+                document.getElementById('yearInput').value = '';
+                document.getElementById('readingStateSelect').value = 'Planned';
+                document.getElementById('shelfSelect').value = 'Main shelf';
+                document.getElementById('descriptionInput').value = '';
+            }
+            document.getElementById('detailDrawer').classList.add('active');
+            document.getElementById('drawerOverlay').classList.add('active');
+        }
+
+        function closeDrawer() {
+            document.getElementById('detailDrawer').classList.remove('active');
+            document.getElementById('drawerOverlay').classList.remove('active');
+        }
+
+        function saveBook() {
+            const title = document.getElementById('titleInput').value.trim();
+            if (!title) {
+                alert('Title is required');
+                document.getElementById('titleInput').focus();
+                return;
+            }
+
+            if (currentBookId) {
+                const idx = books.findIndex(b => b.id === currentBookId);
+                if (idx > -1) {
+                    books[idx] = {
+                        ...books[idx],
+                        title,
+                        author: document.getElementById('authorInput').value.trim(),
+                        isbn: document.getElementById('isbnInput').value.trim(),
+                        publisher: document.getElementById('publisherInput').value.trim(),
+                        year: document.getElementById('yearInput').value ? parseInt(document.getElementById('yearInput').value) : null,
+                        readingState: document.getElementById('readingStateSelect').value,
+                        shelf: document.getElementById('shelfSelect').value,
+                        description: document.getElementById('descriptionInput').value.trim(),
+                        updatedAt: new Date().toISOString()
+                    };
+                }
+            } else {
+                const newBook = {
+                    id: generateId(),
+                    title,
+                    author: document.getElementById('authorInput').value.trim(),
+                    isbn: document.getElementById('isbnInput').value.trim(),
+                    publisher: document.getElementById('publisherInput').value.trim(),
+                    year: document.getElementById('yearInput').value ? parseInt(document.getElementById('yearInput').value) : null,
+                    readingState: document.getElementById('readingStateSelect').value,
+                    shelf: document.getElementById('shelfSelect').value,
+                    description: document.getElementById('descriptionInput').value.trim(),
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                books.push(newBook);
+            }
+
+            saveBooks();
+            closeDrawer();
+            const shelfView = document.getElementById('shelfViewBtn').classList.contains('active');
+            if (shelfView) {
+                renderShelves();
+            } else {
+                renderList();
+            }
+        }
+
+        function searchBooks(term) {
+            term = term.toLowerCase();
+            if (!term) {
+                return books.filter(b => b.shelf === 'Main shelf');
+            }
+            return books.filter(b => {
+                const title = (b.title || '').toLowerCase();
+                const author = (b.author || '').toLowerCase();
+                return title.includes(term) || author.includes(term);
+            });
+        }
+
+        // Event listeners
+        document.getElementById('quickAddBtn').addEventListener('click', () => {
+            openDrawer(null);
+        });
+
+        document.getElementById('closeDrawerBtn').addEventListener('click', closeDrawer);
+        document.getElementById('drawerOverlay').addEventListener('click', closeDrawer);
+        document.getElementById('saveBtn').addEventListener('click', saveBook);
+
+        document.getElementById('shelfViewBtn').addEventListener('click', () => {
+            document.getElementById('shelfViewBtn').classList.add('active');
+            document.getElementById('listViewBtn').classList.remove('active');
+            document.getElementById('shelvesContainer').classList.remove('hidden');
+            document.getElementById('listContainer').classList.remove('active');
+            renderShelves();
+        });
+
+        document.getElementById('listViewBtn').addEventListener('click', () => {
+            document.getElementById('listViewBtn').classList.add('active');
+            document.getElementById('shelfViewBtn').classList.remove('active');
+            document.getElementById('shelvesContainer').classList.add('hidden');
+            document.getElementById('listContainer').classList.add('active');
+            renderList();
+        });
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value;
+            const shelfView = document.getElementById('shelfViewBtn').classList.contains('active');
+            if (shelfView) {
+                renderShelves();
+            } else {
+                renderList();
+            }
+        });
+
+        // Initialize
+        loadBooks();
+        renderShelves();
+    </script>
+</body>
+</html>

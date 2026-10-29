@@ -1,0 +1,14 @@
+@layer components {
+  @scope (.card) {
+    :scope {
+      background: var(--surface-default);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md, 4px);
+      padding: var(--space-gutter, var(--space-4));
+      box-shadow: var(--shadow-sm, 0 1px 2px transparent);
+    }
+    & .title { font-size: var(--text-heading-3); line-height: 1.2; margin-block-end: var(--space-2); }
+    & .body { font-size: var(--text-body); color: var(--text-on-default); }
+    & .footer { margin-block-start: var(--space-3); padding-block-start: var(--space-2); border-block-start: 1px solid var(--border-subtle); }
+  }
+}

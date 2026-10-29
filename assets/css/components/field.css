@@ -1,0 +1,74 @@
+@layer components {
+  @scope (.field) {
+    :scope {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1, .25rem);
+    }
+    & label {
+      font-size: var(--text-xs, .75rem);
+      font-weight: 700;
+      letter-spacing: .08em;
+      color: var(--text-secondary);
+      margin-block-end: var(--space-1, .25rem);
+      display: block;
+    }
+
+    & input,
+    & textarea,
+    & select {
+      width: 100%;
+      padding: var(--space-3, 10px) var(--space-3, 12px);
+      border: 0;
+      border-bottom: 2px solid var(--text-on-default);
+      background: var(--surface-field);
+      color: var(--text-on-default);
+      font-size: var(--text-body, 17px);
+      font-family: var(--font-body, system-ui, sans-serif);
+      transition: border-color var(--move, 80ms ease);
+    }
+    & input:focus,
+    & textarea:focus,
+    & select:focus {
+      border-color: var(--surface-primary);
+      outline: none;
+    }
+    & textarea {
+      min-height: 3rem;
+      resize: vertical;
+    }
+    & .hint {
+      font-size: var(--text-body-sm, .875rem);
+      color: var(--text-secondary);
+    }
+    & .tagchecks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2, .5rem);
+    }
+    & .tagchecks label {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1, .25rem);
+      border: 1px solid var(--border-subtle);
+      padding: var(--space-1, .25rem) var(--space-2, .5rem);
+      cursor: pointer;
+      font-size: var(--text-ui, .875rem);
+      color: var(--text-secondary);
+      background: var(--surface-default);
+    }
+    & .tagchecks label:hover {
+      border-color: var(--surface-primary);
+      color: var(--surface-primary);
+    }
+    & .tagchecks input {
+      accent-color: var(--surface-primary);
+      margin: 0;
+    }
+    & .tagchecks label.is-on {
+      border-color: var(--surface-primary);
+      color: var(--surface-primary);
+      font-weight: 600;
+    }
+  }
+}

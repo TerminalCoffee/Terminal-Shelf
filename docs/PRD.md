@@ -1,16 +1,29 @@
-# PRD — Estante Virtual
-
+# PRD — Terminal Shelf
 **Status:** Draft inicial
 **Versão:** 0.1
 **Escopo:** V1 física / coleção pessoal
 
 ## 1. Visão do produto
 
-A Estante Virtual é uma ferramenta de gestão pessoal de acervo, inicialmente focada em livros físicos. Seu objetivo não é reproduzir um catálogo social de livros, mas ajudar uma pessoa a **registrar, encontrar, organizar e acompanhar o ciclo de vida de sua própria coleção**.
+A Terminal Shelf é uma ferramenta de gestão pessoal de acervo, inicialmente focada
+em livros físicos. Seu objetivo não é reproduzir um catálogo social de livros, mas
+ajudar uma pessoa a **registrar, organizar, planejar e acompanhar o ciclo de vida
+de sua própria coleção**.
 
 A principal diferença em relação a produtos como Goodreads, IMDb ou MyAnimeList é de prioridade: a coleção do usuário não é uma consequência secundária do catálogo; **ela é o objeto central do sistema**.
 
 A V1 será construída em torno do domínio físico de livros. A extensão futura para acervos digitais e outros tipos de obras é um objetivo de evolução, mas está fora do escopo funcional da primeira versão.
+
+## 1.1. O que torna o produto valioso
+
+A parte difícil deste projeto não é a modelagem do domínio — registrar livros,
+estados de leitura, coleções e localização é um problema de CRUD. A parte
+difícil é a **experiência**: fazer com que o acervo sinta acessível, que o
+cadastro não pareça trabalho, que encontrar um livro seja imediato e que a
+organização não exija disciplina de planilha.
+
+A V1 será avaliada pela qualidade da experiência do usuário, não pela
+complexidade da arquitetura.
 
 ## 2. Problema
 
@@ -89,13 +102,16 @@ O objetivo não é apenas catalogar obras, mas **auxiliar a pessoa a administrar
 5. Facilitar a recuperação de informações e o planejamento do que ler.
 6. Substituir planilhas e processos manuais por uma ferramenta dedicada ao domínio do acervo.
 
-### 3.2. Objetivos arquiteturais
+### 3.2. Objetivos de experiência e arquitetura
 
-1. Construir o sistema com abordagem **local-first**.
-2. Começar como **monólito modular**.
-3. Projetar fronteiras modulares tendo em vista a evolução para **microsserviços**.
-4. Permitir múltiplas interfaces, incluindo Web e CLI, sem duplicar o núcleo do domínio e da aplicação.
-5. Manter a arquitetura preparada para evolução incremental sem introduzir distribuição antes da necessidade operacional.
+1. **Interface-first:** a experiência do usuário é o critério primário de
+   decisões de design. Funcionalidades que complicam o fluxo principal não entram.
+2. **CRUD simples:** o domínio é pequeno e estável. Não se busca complexidade
+   de modelagem; busca-se cobertura completa do ciclo de uso com o mínimo de
+   estados.
+3. **Múltiplas interfaces:** Web e CLI como adaptadores sobre o mesmo núcleo,
+   sem duplicar regras de negócio.
+4. **Local-first:** dados vivem localmente e operam sem depender de rede.
 
 ## 4. Princípios do produto
 
@@ -119,67 +135,41 @@ A busca serve para responder a uma necessidade imediata e efêmera. A organizaç
 
 A ferramenta deve permitir representar logicamente diferentes organizações do acervo sem exigir a mesma disposição na estante física.
 
-## 5. Escopo da V1
+## 5. Funcionalidades principais
 
-### 5.1. Dentro do escopo
-
-* catálogo pessoal;
-* cadastro simplificado e incremental;
-* busca no acervo;
-* organização e reorganização lógica;
-* representação de localização física;
-* gestão do ciclo de vida de leitura;
-* criação e gestão de coleções pessoais;
-* lembretes;
-* sugestão e gestão de fila de leitura;
-* interface Web;
-* armazenamento e operação local;
-* estrutura modular compatível com evolução futura para microsserviços.
-
-### 5.2. Fora do escopo da V1
-
-* catálogo universal ou social de livros;
-* recursos sociais entre usuários;
-* domínio digital de mangas, manhwas, manhuas e outros conteúdos distribuídos em sites;
-* agregação de links de sites de leitura;
-* integração obrigatória com um conjunto amplo de fontes externas;
-* arquitetura distribuída em microsserviços como deployment inicial.
-
-## 6. Funcionalidades principais
-
-### 6.1. Catálogo
+### 5.1. Catálogo
 
 Manter os registros do acervo pessoal e as informações conhecidas sobre cada item.
 
-### 6.2. Cadastro simplificado
+### 5.2. Cadastro simplificado
 
 Permitir registrar um item com o mínimo de informações possível e evoluir o cadastro posteriormente.
 
-### 6.3. Busca
+### 5.3. Busca
 
 Permitir encontrar rapidamente itens do acervo usando os atributos disponíveis.
 
 A busca é uma operação efêmera: encontrar algo agora não implica que a forma de busca se torne uma organização persistente da coleção.
 
-### 6.4. Sistema de organização
+### 5.4. Sistema de organização
 
 Permitir estruturar a coleção de formas diferentes, potencialmente incluindo agrupamentos, ordenações e outras visões persistentes.
 
-### 6.5. Gestão do ciclo de vida
+### 5.5. Gestão do ciclo de vida
 
 Registrar estados relevantes do relacionamento do usuário com uma obra ou exemplar, evitando reduzir o processo a "lido" e "não lido".
 
 A taxonomia exata dos estados será consolidada durante a modelagem do domínio.
 
-### 6.6. Coleções
+### 5.6. Coleções
 
 Permitir que o usuário crie agrupamentos próprios para representar interesses, projetos de leitura ou outras formas de segmentar o acervo.
 
-### 6.7. Lembretes e fila de leitura
+### 5.7. Lembretes e fila de leitura
 
 Permitir registrar intenções futuras e apoiar a decisão sobre o que ler em seguida.
 
-## 7. Requisitos funcionais de alto nível
+## 6. Requisitos funcionais de alto nível
 
 | ID | Requisito |
 | --- | --- |
@@ -196,34 +186,18 @@ Permitir registrar intenções futuras e apoiar a decisão sobre o que ler em se
 | FR-11 | O domínio e os casos de uso devem ser reutilizáveis por diferentes interfaces. |
 | FR-12 | O sistema deve operar com prioridade local-first. |
 
-## 8. Requisitos não funcionais / qualidades
+## 7. Requisitos não funcionais / qualidades
 
-| ID | Requisito |
-| --- | --- |
-| NFR-01 | O sistema deve priorizar operação local e acesso aos dados sem depender de conectividade contínua. |
-| NFR-02 | O cadastro e a consulta devem apresentar baixa fricção para o usuário. |
-| NFR-03 | A arquitetura deve permitir testes e evolução dos módulos de forma independente sempre que possível. |
-| NFR-04 | As fronteiras dos módulos devem ser definidas de forma compatível com futura extração para microsserviços. |
-| NFR-05 | O núcleo de domínio não deve depender de uma interface específica. |
-| NFR-06 | O sistema deve permitir evolução do modelo sem exigir o preenchimento retroativo imediato de todos os registros. |
-| NFR-07 | A arquitetura inicial deve evitar complexidade distribuída desnecessária, sem abandonar o objetivo de evolução para microsserviços. |
+| ID     | Requisito                                                                                                                                                       |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| NFR-01 | O sistema deve priorizar operação local e acesso aos dados sem depender de conectividade contínua.                                                              |
+| NFR-02 | O cadastro e a consulta devem apresentar baixa fricção para o usuário.                                                                                          |
+| NFR-03 | A arquitetura deve permitir testes e evolução dos módulos de forma independente sempre que possível.                                                            |
+| NFR-04 | As fronteiras dos módulos devem ser definidas de forma que a extração opcional seja possível sem reescrever o domínio, sem que isso seja um compromisso prévio. |
+| NFR-05 | O núcleo de domínio não deve depender de uma interface específica.                                                                                              |
+| NFR-06 | O sistema deve permitir evolução do modelo sem exigir o preenchimento retroativo imediato de todos os registros.                                                |
 
-## 9. Modelo mental inicial do domínio
-
-O modelo ainda não está fechado, mas os seguintes conceitos já são candidatos centrais:
-
-* **Obra:** representação do conteúdo intelectual catalogado.
-* **Exemplar:** instância possuída ou acompanhada pelo usuário.
-* **Acervo/Coleção pessoal:** conjunto de itens administrados pelo usuário.
-* **Localização:** representação de onde um exemplar está fisicamente guardado.
-* **Estado de leitura:** posição do usuário no ciclo de leitura/acompanhamento.
-* **Coleção personalizada:** agrupamento definido pelo usuário.
-* **Fila de leitura:** conjunto ordenado ou priorizado de itens que o usuário pretende ler.
-* **Lembrete:** intenção futura associada a um item ou contexto do acervo.
-
-Esses conceitos são deliberadamente provisórios até a modelagem detalhada do domínio.
-
-## 10. Personas iniciais
+## 8. Personas iniciais
 
 ### Eloy — leitor de acervo físico
 
@@ -232,28 +206,3 @@ Possui livros físicos, sofre com limitações de espaço e usa hoje uma planilh
 ### Lucas — leitor digital
 
 É um usuário-alvo futuro. Possui um acervo distribuído em várias fontes e precisa recuperar obras, classificá-las, acompanhar lançamentos e manter uma fila de leitura sem depender de disciplina manual.
-
-## 11. Indicadores de sucesso
-
-A V1 será considerada bem-sucedida se:
-
-1. O usuário conseguir cadastrar rapidamente um livro mesmo sem ter todos os dados em mãos.
-2. O usuário conseguir encontrar um livro sem depender da disposição atual da estante.
-3. O usuário conseguir representar mais de uma organização útil sobre o mesmo acervo.
-4. O usuário conseguir entender o que está lendo, o que terminou e o que pretende ler em seguida.
-5. A manutenção do acervo for percebida como mais simples do que manter uma planilha manual equivalente.
-
-## 12. Questões em aberto
-
-* Quais estados de ciclo de vida serão oficialmente suportados?
-* Qual é a relação exata entre Obra e Exemplar?
-* Quais formas de organização são necessárias na V1?
-* Como coleções interagem com organizações e localização física?
-* Como a fila de leitura será priorizada e sugerida?
-* Qual mecanismo de armazenamento local será adotado?
-* Quais módulos constituirão as primeiras fronteiras do monólito?
-* Como e quando os módulos serão extraídos para serviços independentes?
-
-## 13. Critério de evolução
-
-Novas funcionalidades devem ser avaliadas primeiro pelo problema de gestão do acervo que resolvem. A adição de funcionalidades que reproduzem comportamentos de catálogos sociais ou agregadores de mídia deve ser evitada quando não contribuir diretamente para a gestão pessoal do acervo.

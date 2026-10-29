@@ -1,0 +1,103 @@
+@layer tokens, reset, layout, base, components;
+
+@layer tokens {
+  @layer primitive {
+    :root {
+      /* === COLOR PRIMITIVES - oklch === */
+      --primitive-cyan: oklch(67.5% 0.142 234.3);     /* #00A3E0 */
+      --primitive-espresso: oklch(27.3% 0.04 39.2);    /* #382018 */
+      --primitive-charcoal: oklch(20% 0.019 305);      /* #18141D */
+      --primitive-white: oklch(100% 0 0);
+      --primitive-slate: oklch(87.6% 0.012 248);       /* #D0D7DE */
+
+      /* === SPACE PRIMITIVES - Tailwind scale but fluid for >=1rem === */
+      /* micro stays fixed */
+      --space-1: 0.25rem; /* 4px */
+      --space-2: 0.5rem;  /* 8px */
+      --space-3: 0.75rem; /* 12px */
+      /* macro fluid */
+      --space-4: clamp(1rem, 0.91rem + 0.44vw, 1.25rem);      /* 16px -> 20px */
+      --space-6: clamp(1.5rem, 1.36rem + 0.67vw, 1.88rem);    /* 24px -> 30px */
+      --space-8: clamp(2rem, 1.82rem + 0.89vw, 2.5rem);       /* 32px -> 40px */
+      --space-12: clamp(3rem, 2.73rem + 1.33vw, 3.75rem);     /* 48px -> 60px */
+      --space-16: clamp(4rem, 3.64rem + 1.78vw, 5rem);        /* 64px -> 80px */
+
+      /* === TYPE PRIMITIVES - Tailwind scale but fluid === */
+      --text-xs: clamp(0.75rem, 0.73rem + 0.11vw, 0.81rem);    /* 12px */
+      --text-sm: clamp(0.875rem, 0.84rem + 0.18vw, 0.98rem);   /* 14px - terminal */
+      --text-base: clamp(1rem, 0.93rem + 0.36vw, 1.25rem);     /* 16px -> 20px */
+      --text-lg: clamp(1.125rem, 1.02rem + 0.52vw, 1.44rem);   /* 18px */
+      --text-2xl: clamp(1.5rem, 1.29rem + 1.05vw, 2.2rem);     /* 24px */
+      --text-3xl: clamp(1.875rem, 1.56rem + 1.57vw, 2.81rem);  /* 30px */
+      --text-4xl: clamp(2.25rem, 1.8rem + 2.25vw, 3.75rem);     /* 36px */
+      --text-5xl: clamp(3rem, 2.25rem + 3.75vw, 5rem);         /* 48px */
+    }
+  }
+
+  @layer semantic {
+    :root {
+      color-scheme: light dark;
+
+      /* --- COLOR --- */
+      /* HUE */
+      --surface-brand: var(--primitive-cyan);
+      --surface-accent: var(--primitive-espresso);
+
+      /* JOB */
+      --surface-primary: var(--surface-brand);
+      --surface-secondary: var(--surface-subtle);
+      --surface-tertiary: var(--surface-accent);
+      --surface-default: light-dark(var(--primitive-white), var(--primitive-charcoal));
+      --surface-subtle: light-dark(var(--primitive-slate), oklch(27% 0.019 305));
+      --surface-field: light-dark(color-mix(in oklab, var(--primitive-white) 72%, var(--primitive-slate)), oklch(27% 0.019 305));
+      --surface-inverse: light-dark(var(--primitive-charcoal), var(--primitive-white));
+
+      --text-primary: var(--text-on-default);
+      --text-secondary: color-mix(in oklab, var(--text-on-default) 65%, var(--surface-default));
+      --text-on-primary: var(--text-on-brand);
+      --text-on-secondary: var(--text-on-subtle);
+      --text-inverse: var(--text-on-inverse);
+
+      --text-on-default: contrast-color(var(--surface-default));
+      --text-on-subtle: contrast-color(var(--surface-subtle));
+      --text-on-inverse: contrast-color(var(--surface-inverse));
+      --text-on-brand: contrast-color(var(--surface-brand));
+      --text-on-accent: contrast-color(var(--surface-accent));
+
+      --border-subtle: light-dark(var(--primitive-slate), oklch(30% 0.019 305));
+      --border-strong: light-dark(var(--primitive-charcoal), var(--primitive-slate));
+
+      /* auto hovers - no new hex */
+      --surface-primary-hover: color-mix(in oklab, var(--surface-primary) 85%, var(--text-on-primary));
+      --surface-secondary-hover: color-mix(in oklab, var(--surface-secondary) 85%, var(--text-on-secondary));
+      --surface-tertiary-hover: color-mix(in oklab, var(--surface-tertiary) 85%, var(--text-on-accent));
+
+      /* --- SPACE SEMANTIC - 5 vars you actually use --- */
+      --space-gutter: var(--space-4);      /* page / card padding */
+      --space-stack: var(--space-4);       /* between paragraphs */
+      --space-stack-lg: var(--space-8);    /* between sections */
+      --space-section: var(--space-16);    /* between big blocks */
+      --space-cluster: var(--space-3);     /* between buttons/tags */
+
+      /* --- TYPE SEMANTIC  --- */
+      --text-body: var(--text-base);
+      --text-body-sm: var(--text-sm);      /* terminal lines, captions */
+      --text-code: var(--text-sm);
+      --text-ui: var(--text-sm);           /* buttons */
+      --text-heading-3: var(--text-2xl);
+      --text-heading-2: var(--text-3xl);
+      --text-heading-1: var(--text-4xl);   /* for blog: use 4xl not 5xl */
+    }
+  }
+
+  /* fallback for browsers without contrast-color() - April 2026 baseline */
+  @supports not (color: contrast-color(red)) {
+    :root {
+      --text-on-default: light-dark(var(--primitive-charcoal), var(--primitive-white));
+      --text-on-inverse: light-dark(var(--primitive-white), var(--primitive-charcoal));
+      --text-on-brand: var(--primitive-white);
+      --text-on-accent: var(--primitive-white);
+    }
+  }
+}
+

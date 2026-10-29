@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terminal Shelf — conceito 5: a sala da estante</title>
+<style>
+  :root{
+    --paper:#F4F3EE;
+    --paper-2:#FBFAF6;
+    --ink:#1B1B1B;
+    --ink-soft:#5C5850;
+    --ink-faint:#9A958A;
+    --line:#DCD8CC;
+    --vermillion:#C73E2C;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", "Cascadia Code", Consolas, "Liberation Mono", Menlo, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", "URW Palladio L", Georgia, serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:var(--sans);font-size:14px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--vermillion);color:var(--paper)}
+  :focus-visible{outline:2px solid var(--vermillion);outline-offset:2px}
+  button{font:inherit;color:inherit}
+  input,textarea{font:inherit;color:inherit}
+
+  /* ============ state marks ============ */
+  .mark{width:12px;height:12px;flex:0 0 auto;border:1.5px solid var(--vermillion)}
+  .mark.circle{border-radius:50%}
+  .mark.filled{background:var(--vermillion)}
+  .mark.dashed{border-style:dashed}
+  .mark.ring{outline:1.5px solid var(--vermillion);outline-offset:2px}
+  .mark.pill{width:18px;height:8px;border-radius:999px;margin-top:2px}
+
+  .seal-next{
+    display:inline-flex;align-items:center;
+    border:1.5px solid var(--vermillion);color:var(--vermillion);
+    font-size:8.5px;font-weight:700;letter-spacing:.08em;
+    padding:1px 7px;transform:rotate(-3deg);flex:0 0 auto;
+  }
+  .seal-next.is-on{background:var(--vermillion);color:var(--paper)}
+
+  /* ============ app grid ============ */
+  .app{display:grid;grid-template-columns:56px minmax(0,1fr) 292px;min-height:100vh}
+
+  .brand-rail{
+    border-right:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;gap:30px;
+    padding:22px 0;position:sticky;top:0;height:100vh;background:var(--paper);z-index:20;
+  }
+  .hanko{
+    width:34px;height:34px;background:var(--vermillion);color:var(--paper);
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:700;transform:rotate(-3deg);
+  }
+  .brand-v{writing-mode:vertical-rl;font-weight:700;font-size:13px;letter-spacing:.3em}
+
+  /* ============ header ============ */
+  .main{min-width:0;display:flex;flex-direction:column}
+  .head{
+    position:sticky;top:0;z-index:15;background:var(--paper);
+    border-bottom:1px solid var(--line);
+  }
+  .head-in{display:flex;align-items:center;gap:16px;padding:14px 28px}
+  .search{flex:1;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--ink);padding-bottom:6px}
+  .search input{flex:1;background:none;border:0;padding:0;font-size:15px;font-family:var(--serif)}
+  .search input:focus{outline:none}
+  .search input::placeholder{color:var(--ink-faint)}
+  .search kbd{font-family:var(--mono);font-size:11px;color:var(--ink-faint);border:1px solid var(--line);padding:0 6px}
+  .vt{display:flex;border:1px solid var(--ink)}
+  .vt button{
+    background:none;border:0;padding:7px 16px;cursor:pointer;
+    font-size:12.5px;color:var(--ink-soft);
+  }
+  .vt button + button{border-left:1px solid var(--ink)}
+  .vt button.is-on{background:var(--ink);color:var(--paper);font-weight:600}
+  .btn-add{
+    background:var(--vermillion);color:var(--paper);border:0;
+    font-size:13px;font-weight:700;padding:9px 20px;cursor:pointer;
+    transition:background .12s ease;
+  }
+  .btn-add:hover{background:#A93323}
+  .btn-quiet{
+    background:none;border:1px solid var(--line);color:var(--ink-soft);
+    font-size:12px;padding:7px 14px;cursor:pointer;
+  }
+  .btn-quiet:hover{border-color:var(--vermillion);color:var(--vermillion)}
+
+  /* ============ content ============ */
+  .content{flex:1;padding:24px 28px 48px;min-width:0}
+  #listView{display:none}
+  .content.show-list #listView{display:block}
+  .content.show-list #shelfView{display:none}
+
+  .view-head{display:flex;align-items:baseline;gap:12px;margin:0 0 4px}
+  .view-head h1{font-family:var(--serif);font-size:24px;font-weight:400;letter-spacing:-.01em;margin:0}
+  .view-head .count{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+  .view-sub{font-size:12.5px;color:var(--ink-soft);margin:0 0 22px;max-width:66ch}
+  .view-sub .key{color:var(--vermillion);font-weight:600}
+
+  /* ============ shelf view ============ */
+  .shelf-block{margin-bottom:36px}
+  .shelf-head{display:flex;align-items:baseline;gap:12px;margin-bottom:8px}
+  .shelf-head h2{font-family:var(--serif);font-size:18px;font-weight:400;margin:0}
+  .shelf-head .cap{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+  .shelf-head .cap.full{color:var(--vermillion)}
+  .capbar{height:3px;background:var(--line);max-width:680px;margin-bottom:12px}
+  .capbar i{display:block;height:100%;background:var(--vermillion)}
+  .capbar i.full{background:var(--vermillion)}
+
+  .spines{display:flex;align-items:flex-end;gap:5px;overflow-x:auto;padding:0 2px 4px;min-width:0;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .spine{
+    position:relative;flex:0 0 auto;border:0;padding:10px 5px 10px;cursor:pointer;
+    color:rgba(251,250,246,.94);font-family:var(--serif);font-size:12px;
+    border-radius:2px 2px 0 0;writing-mode:vertical-rl;transform:rotate(180deg);
+    box-shadow:inset -4px 0 7px -4px rgba(0,0,0,.45), inset 4px 0 7px -5px rgba(255,255,255,.14);
+    overflow:hidden;white-space:nowrap;
+    transition:transform .15s ease, filter .15s ease, opacity .2s ease;
+  }
+  .spine:hover,.spine:focus-visible{transform:rotate(180deg) translateY(-9px);filter:brightness(1.08);z-index:2}
+  .spine .spine-seal{
+    position:absolute;left:50%;top:6px;transform:translateX(-50%);
+    width:15px;height:15px;background:var(--paper-2);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 0 1px rgba(0,0,0,.15);
+  }
+  .spine .spine-seal .mark{border-width:1.5px}
+  .spine .spine-seal .mark.pill{width:9px;height:5px;margin-top:0}
+  .spine .spine-seal .mark.ring{outline-width:1px;outline-offset:1px}
+  .spine.bare{border:1px dashed var(--ink-faint);background:transparent!important;box-shadow:none;color:var(--ink-faint);font-family:var(--mono);font-size:10.5px}
+  .spine.bare:hover{transform:rotate(180deg) translateY(-4px);border-color:var(--vermillion);color:var(--ink-soft)}
+  .spine.dim{opacity:.14;filter:grayscale(.7)}
+  .spine.dim:hover{opacity:.9;filter:none}
+  .spine.flash{animation:pop 1.2s ease}
+  @keyframes pop{
+    0%{filter:brightness(1.5)}
+    100%{filter:brightness(1)}
+  }
+  .plank{height:0;border-top:2px solid var(--ink);max-width:680px;margin-top:0;position:relative}
+  .plank::after{content:"";position:absolute;top:4px;left:0;right:0;border-top:1px solid var(--ink)}
+  .shelf-block.loose .plank{border-top:1px dashed var(--ink-faint)}
+  .shelf-block.loose .plank::after{display:none}
+
+  /* ============ list view ============ */
+  .state-chips{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 18px}
+  .chip{
+    background:none;border:1px solid var(--line);color:var(--ink-soft);
+    font-size:12px;padding:4px 12px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;
+  }
+  .chip:hover{border-color:var(--vermillion);color:var(--vermillion)}
+  .chip.is-on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .chip i{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+  .chip.is-on i{box-shadow:0 0 0 1.5px rgba(251,250,246,.5)}
+
+  .ltable{border-top:1px solid var(--ink)}
+  .lrow{
+    display:grid;grid-template-columns:110px minmax(0,1.7fr) minmax(0,1.2fr) minmax(0,1.3fr) auto;
+    gap:16px;align-items:center;width:100%;
+    background:none;border:0;border-bottom:1px solid var(--line);
+    padding:11px 6px;cursor:pointer;text-align:left;
+    transition:background .12s ease;
+  }
+  .lrow:hover{background:var(--paper-2)}
+  .lrow.flash{animation:rowpop 1.2s ease}
+  @keyframes rowpop{0%{background:#F6E3DE}100%{background:transparent}}
+  .lhead{
+    display:grid;grid-template-columns:110px minmax(0,1.7fr) minmax(0,1.2fr) minmax(0,1.3fr) auto;
+    gap:16px;padding:8px 6px;border-bottom:1px solid var(--ink);
+    font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--ink-faint);
+  }
+  .cell-state{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-soft)}
+  .cell-title{font-family:var(--serif);font-size:15.5px;line-height:1.3;letter-spacing:-.01em}
+  .cell-author{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-soft)}
+  .cell-loc{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+  .cell-tags{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
+  .tag{font-size:10px;border:1px solid var(--line);padding:0 6px;color:var(--ink-soft);background:var(--paper-2)}
+  .tag.q{background:var(--vermillion);border-color:var(--vermillion);color:var(--paper);font-weight:700}
+  .list-empty{padding:34px 6px;border-bottom:1px solid var(--line)}
+  .list-empty h3{font-family:var(--serif);font-size:17px;font-weight:400;margin:0 0 4px}
+  .list-empty p{font-size:12.5px;color:var(--ink-soft);margin:0 0 12px}
+
+  /* ============ side rail ============ */
+  .side-rail{
+    border-left:1px solid var(--line);background:var(--paper-2);
+    padding:22px 18px;position:sticky;top:0;height:100vh;overflow-y:auto;
+  }
+  .rail-sec{margin-bottom:34px}
+  .rail-head{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+  .rail-head h2{font-family:var(--serif);font-size:18px;font-weight:400;margin:0;flex:1}
+  .rail-head .count{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+  .rail-sub{font-size:11.5px;color:var(--ink-faint);margin:0 0 14px;max-width:34ch}
+  .rail-sub .key{color:var(--vermillion);font-weight:600}
+
+  .qrow{
+    display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:10px;align-items:start;
+    border-bottom:1px solid var(--line);padding:11px 0;
+  }
+  .q-num{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--ink-faint);padding-top:2px;text-align:center}
+  .qrow.is-first .q-num{color:var(--vermillion)}
+  .q-sum{background:none;border:0;cursor:pointer;text-align:left;padding:0;min-width:0}
+  .q-sum:hover .q-title{color:var(--vermillion)}
+  .q-title{font-family:var(--serif);font-size:14.5px;line-height:1.3;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .q-author{font-family:var(--serif);font-style:italic;font-size:12px;color:var(--ink-soft);display:block;margin-top:1px}
+  .q-why{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);display:block;margin-top:3px}
+  .pin-btn{
+    background:none;border:1.5px solid var(--vermillion);color:var(--vermillion);
+    font-size:8.5px;font-weight:700;letter-spacing:.08em;padding:3px 8px;
+    cursor:pointer;transform:rotate(-3deg);margin-top:2px;
+  }
+  .pin-btn:hover{background:var(--vermillion);color:var(--paper)}
+  .pin-btn.is-on{background:var(--vermillion);color:var(--paper)}
+  .rail-actions{margin-top:14px}
+  .rail-actions .btn-quiet{width:100%}
+
+  .cf{
+    display:flex;align-items:center;gap:9px;width:100%;
+    background:none;border:0;border-bottom:1px solid transparent;
+    padding:7px 2px;cursor:pointer;text-align:left;font-size:13px;color:var(--ink-soft);
+  }
+  .cf:hover{color:var(--ink)}
+  .cf.is-on{color:var(--vermillion);font-weight:600;border-bottom-color:var(--vermillion)}
+  .cf .rail-mark{width:11px;height:11px;border:1.5px solid var(--ink);flex:0 0 auto}
+  .cf.is-on .rail-mark{background:var(--vermillion);border-color:var(--vermillion)}
+  .cf .n{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+
+  /* ============ modal (ficha) ============ */
+  .scrim{
+    position:fixed;inset:0;background:rgba(27,27,27,.32);opacity:0;pointer-events:none;
+    transition:opacity .16s ease;z-index:40;
+  }
+  .scrim.is-on{opacity:1;pointer-events:auto}
+  .modal{
+    position:fixed;z-index:41;left:50%;top:50%;transform:translate(-50%,-48%);
+    width:min(520px,calc(100vw - 28px));max-height:calc(100vh - 44px);overflow-y:auto;
+    background:var(--paper-2);border:1px solid var(--ink);
+    opacity:0;pointer-events:none;transition:opacity .16s ease, transform .16s ease;
+  }
+  .modal.is-on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+  .modal-head{
+    display:flex;justify-content:space-between;gap:14px;align-items:flex-start;
+    padding:20px 24px 14px;border-bottom:1px solid var(--line);
+  }
+  .modal-head .fid{font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.04em}
+  .modal-head h2{font-family:var(--serif);font-size:23px;font-weight:400;margin:4px 0 0;letter-spacing:-.01em;line-height:1.2}
+  .x{background:none;border:1px solid var(--line);width:30px;height:30px;cursor:pointer;font-size:14px;line-height:1;flex:0 0 auto;color:var(--ink-soft)}
+  .x:hover{border-color:var(--vermillion);color:var(--vermillion)}
+  .modal-body{padding:18px 24px 22px;display:flex;flex-direction:column;gap:18px}
+
+  /* cycle diagram */
+  .cycle-cap{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--ink-faint);margin-bottom:8px}
+  .cycle{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 4px}
+  .ccell{display:flex;align-items:center;gap:5px;min-width:0}
+  .csub{flex-direction:column;align-items:stretch;gap:0}
+  .hlink{flex:1;height:1px;background:var(--line);min-width:6px}
+  .vlink{width:1px;height:11px;border-left:1px dashed var(--vermillion);margin:0 auto 5px}
+  .cnode{
+    display:inline-flex;align-items:center;gap:6px;
+    border:1px solid var(--line);background:var(--paper);
+    padding:5px 9px;cursor:pointer;font-size:11.5px;color:var(--ink-soft);white-space:nowrap;
+    transition:border-color .12s ease, color .12s ease, background .12s ease;
+  }
+  .cnode:hover{border-color:var(--vermillion);color:var(--vermillion)}
+  .cnode.is-on{border-color:var(--vermillion);background:var(--vermillion);color:var(--paper);font-weight:600}
+  .cnode.is-on .mark{border-color:var(--paper)}
+  .cnode.is-on .mark.filled{background:var(--paper)}
+  .cycle-note{font-size:11px;color:var(--ink-faint);margin-top:10px}
+
+  .ficha-note{font-size:11.5px;color:var(--ink-soft);margin:0;border-left:2px solid var(--vermillion);padding-left:10px}
+  .ficha-note .key{color:var(--vermillion);font-weight:600}
+
+  .field{margin:0}
+  .field label{display:block;font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--ink-faint);margin-bottom:5px}
+  .field input[type=text],.field textarea{
+    width:100%;background:var(--paper);border:1px solid var(--line);padding:8px 11px;font-size:13px;
+  }
+  .field input:focus,.field textarea:focus{border-color:var(--vermillion);outline:none}
+  .field textarea{min-height:50px;resize:vertical}
+  .field .hint{font-size:11px;color:var(--ink-faint);margin-top:4px}
+  .f-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+  .tagchecks{display:flex;flex-wrap:wrap;gap:6px}
+  .tagchecks label{
+    display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);
+    padding:4px 10px;cursor:pointer;font-size:12px;color:var(--ink-soft);background:var(--paper);
+  }
+  .tagchecks label:hover{border-color:var(--vermillion);color:var(--vermillion)}
+  .tagchecks input{accent-color:var(--vermillion);margin:0}
+  .tagchecks label.is-on{border-color:var(--vermillion);color:var(--vermillion);font-weight:600}
+
+  .ficha-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+  /* ============ add modal ============ */
+  .add-head{padding:22px 24px 0}
+  .add-head h2{font-family:var(--serif);font-size:24px;font-weight:400;margin:0;letter-spacing:-.01em}
+  .add-head p{font-size:12.5px;color:var(--ink-soft);margin:8px 0 0;max-width:46ch}
+  .add-head p .key{color:var(--vermillion);font-weight:600}
+  .add-body{padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+  .add-body .field input{
+    font-family:var(--serif);font-size:17px;padding:10px 12px;
+    background:var(--paper);border:0;border-bottom:1.5px solid var(--ink);
+  }
+  .add-body .field input:focus{border-bottom-color:var(--vermillion);outline:none}
+  details.optional{border-top:1px solid var(--line);padding-top:12px}
+  details.optional summary{
+    cursor:pointer;font-size:12px;color:var(--ink-soft);list-style:none;
+    display:flex;align-items:center;gap:8px;
+  }
+  details.optional summary::before{content:"+";color:var(--vermillion);font-weight:700}
+  details.optional[open] summary::before{content:"–"}
+  details.optional summary:hover{color:var(--vermillion)}
+  .opt-grid{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+  .modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:0 24px 22px}
+
+  /* ============ toast ============ */
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,8px);z-index:50;
+    background:var(--ink);color:var(--paper);padding:10px 18px;font-size:12.5px;
+    opacity:0;pointer-events:none;transition:opacity .18s ease, transform .18s ease;
+    max-width:min(540px,calc(100vw - 28px));
+  }
+  .toast.is-on{opacity:1;transform:translate(-50%,0)}
+  .toast .key{color:#E8836F}
+
+  /* ============ responsive ============ */
+  @media (max-width:1150px){
+    .app{grid-template-columns:56px minmax(0,1fr)}
+    .side-rail{
+      grid-column:2;position:static;height:auto;border-left:0;border-top:1px solid var(--line);
+      display:grid;grid-template-columns:1fr 1fr;gap:32px;
+    }
+  }
+  @media (max-width:760px){
+    .head-in{padding:12px 16px;flex-wrap:wrap}
+    .search{order:3;flex-basis:100%}
+    .content{padding:18px 16px 40px}
+    .brand-v{display:none}
+    .side-rail{grid-template-columns:1fr}
+    .lrow,.lhead{grid-template-columns:90px minmax(0,1.6fr) auto}
+    .cell-author,.cell-loc,.lhead span:nth-child(3),.lhead span:nth-child(4){display:none}
+    .f-grid{grid-template-columns:1fr}
+    .cycle{gap:10px 2px}
+    .cnode{font-size:10.5px;padding:4px 6px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="brand-rail">
+    <span class="hanko" title="Terminal Shelf">TS</span>
+    <span class="brand-v">terminal shelf</span>
+  </aside>
+
+  <div class="main">
+    <header class="head">
+      <div class="head-in">
+        <div class="search">
+          <input id="q" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="buscar por título ou autor" aria-label="Buscar no acervo">
+          <kbd aria-hidden="true">/</kbd>
+        </div>
+        <div class="vt" role="group" aria-label="Visualização">
+          <button type="button" data-view="shelf" class="is-on">estante</button>
+          <button type="button" data-view="list">lista</button>
+        </div>
+        <button class="btn-add" id="addBtn" type="button">adicionar</button>
+      </div>
+    </header>
+
+    <div class="content" id="content">
+      <div id="shelfView">
+        <div class="view-head">
+          <h1>minha estante</h1>
+          <span class="count" id="shelfCount"></span>
+        </div>
+        <p class="view-sub">cada livro mora em um lugar. o <span class="key">selo no topo da lombada</span> é o estado de leitura — mude o estado na ficha e o selo troca aqui mesmo, sem o livro sair do lugar.</p>
+        <div id="shelves"></div>
+      </div>
+
+      <div id="listView">
+        <div class="view-head">
+          <h1>todos os livros</h1>
+          <span class="count" id="listCount"></span>
+        </div>
+        <div class="state-chips" id="stateChips" role="group" aria-label="Filtrar por estado"></div>
+        <div class="ltable" id="ltable"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side-rail">
+    <section class="rail-sec" aria-label="A seguir">
+      <div class="rail-head">
+        <h2>a seguir</h2>
+        <span class="count" id="nextCount"></span>
+      </div>
+      <p class="rail-sub">não é uma lista separada: <span class="key">a fila se deriva do ciclo</span> — planejados e desejados, na ordem que faz mais sentido.</p>
+      <div id="next"></div>
+      <div class="rail-actions">
+        <button class="btn-quiet" id="suggestBtn" type="button">marcar o melhor como próximo</button>
+      </div>
+    </section>
+
+    <section class="rail-sec" aria-label="Coleções">
+      <div class="rail-head"><h2>coleções</h2></div>
+      <p class="rail-sub">filtram a estante e a lista ao mesmo tempo.</p>
+      <div id="colls"></div>
+    </section>
+  </aside>
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<div class="modal" id="fichaModal" role="dialog" aria-modal="true" aria-label="Ficha do item"></div>
+
+<div class="modal" id="addModal" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+  <div class="add-head">
+    <h2 id="addTitle">Novo item</h2>
+    <p>Só o título já cria a ficha. Ele entra como <span class="key">desejado</span> e já aparece em a seguir — o resto você completa quando fizer sentido.</p>
+  </div>
+  <div class="add-body">
+    <div class="field">
+      <label for="nTitle">título</label>
+      <input id="nTitle" type="text" placeholder="ex.: O Nome da Rosa">
+    </div>
+    <details class="optional">
+      <summary>detalhes opcionais</summary>
+      <div class="opt-grid">
+        <div class="field">
+          <label for="nAuthor">autor</label>
+          <input id="nAuthor" type="text" placeholder="opcional">
+        </div>
+        <div class="field">
+          <label for="nLoc">local</label>
+          <input id="nLoc" type="text" placeholder="opcional — ex.: estante-1/prat-1/pos-01">
+        </div>
+      </div>
+    </details>
+  </div>
+  <div class="modal-foot">
+    <button class="btn-quiet" id="nCancel" type="button">cancelar</button>
+    <button class="btn-add" id="nSave" type="button">cadastrar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= data ================= */
+  var STATES = {
+    desejado:  {label:"desejado",  cls:"circle"},
+    planejado: {label:"planejado", cls:"square"},
+    lendo:     {label:"lendo",     cls:"filled"},
+    pausado:   {label:"pausado",   cls:"dashed"},
+    concluido: {label:"concluído", cls:"ring"},
+    reler:     {label:"reler",     cls:"pill"}
+  };
+  var STATE_ORDER = ["desejado","planejado","lendo","pausado","concluido","reler"];
+  var QUEUE_STATES = ["planejado","desejado"];
+
+  var SHELVES = [
+    {id:"estante-1", cap:24},
+    {id:"estante-2", cap:24},
+    {id:"estante-3", cap:24},
+    {id:"caixa-1",   cap:12}
+  ];
+
+  var COLLECTIONS = [
+    {id:"clube",      name:"clube de leitura",      note:"encontro quinzenal"},
+    {id:"naolidos",   name:"não lidos",             note:"fila longa, sem pressa"},
+    {id:"reler",      name:"para reler",            note:"já passaram por aqui"},
+    {id:"escritorio", name:"estante do escritório", note:"consulta, não sai de casa"}
+  ];
+
+  var BOOKS = [
+    {id:"BK-011", title:"O Nome da Rosa", author:"Umberto Eco", state:"lendo",
+     loc:"estante-2/prat-3/pos-12", page:"pág. 214", cloth:"#8C4A3C", h:168, w:36,
+     tags:["clube"], since:"12/08", note:"reler o capítulo do riso antes do clube."},
+    {id:"BK-001", title:"Memórias Póstumas de Brás Cubas", author:"Machado de Assis", state:"lendo",
+     loc:"estante-1/prat-2/pos-09", page:"pág. 47", cloth:"#6B5138", h:164, w:34,
+     tags:["reler"], since:"30/09"},
+    {id:"BK-002", title:"Sobre a Escrita da História", author:"Michel de Certeau", state:"planejado",
+     loc:"estante-1/prat-1/pos-04", cloth:"#4E5D6B", h:156, w:32,
+     tags:["clube","naolidos"], since:"03/2026"},
+    {id:"BK-005", title:"A Invenção de Morel", author:"Adolfo Bioy Casares", state:"planejado",
+     loc:"estante-2/prat-3/pos-02", cloth:"#7D4A44", h:146, w:29,
+     tags:["naolidos"], since:"03/2026"},
+    {id:"BK-013", title:"A Casa dos Espíritos", state:"planejado",
+     loc:"", cloth:null, bare:true, h:140, w:27,
+     tags:["naolidos"], since:"28/09"},
+    {id:"BK-009", title:"Horla e Outros Contos", author:"Guy de Maupassant", state:"desejado",
+     loc:"caixa-1/sem-prateleira", cloth:"#6B4A6B", h:144, w:28,
+     tags:["naolidos"], since:"02/2026"},
+    {id:"BK-012", title:"Coleção de Contos Fantásticos", state:"desejado",
+     loc:"", cloth:null, bare:true, h:136, w:26,
+     tags:["naolidos"], since:"05/10"},
+    {id:"BK-004", title:"O Jogo da Amarelinha", author:"Julio Cortázar", state:"pausado",
+     loc:"estante-3/prat-2/pos-07", page:"pág. 88", cloth:"#A8842F", h:172, w:38,
+     tags:["clube"], since:"21/05", note:"esperando o clube retomar a ordem de leitura."},
+    {id:"BK-008", title:"O Ano da Morte de Ricardo Reis", author:"José Saramago", state:"pausado",
+     loc:"estante-2/prat-2/pos-05", page:"pág. 130", cloth:"#8A6B2F", h:170, w:37,
+     tags:["clube"], since:"17/06", note:"parado esperando o vol. 2 chegar."},
+    {id:"BK-007", title:"A Cidade e as Serras", author:"Eça de Queirós", state:"concluido",
+     loc:"estante-2/prat-1/pos-18", cloth:"#5F6B4E", h:150, w:30,
+     tags:["escritorio"], since:"14/02/2026"},
+    {id:"BK-006", title:"Ficções", author:"Jorge Luis Borges", state:"concluido",
+     loc:"estante-1/prat-1/pos-11", cloth:"#4A5A6B", h:158, w:33,
+     tags:["reler","clube"], since:"08/2025"},
+    {id:"BK-003", title:"Temporais", author:"Hilda Hilst", state:"reler",
+     loc:"estante-3/prat-1/pos-03", cloth:"#3E5A63", h:152, w:30,
+     tags:["reler"], since:"11/2025", note:"reler em voz alta, devagar."}
+  ];
+
+  /* ================= state + helpers ================= */
+  var S = { view:"shelf", query:"", collFilter:null, stateFilter:null, openId:null, flashId:null };
+  var $ = function(id){ return document.getElementById(id); };
+  var scrim = $("scrim"), toast = $("toast"),
+      fichaModal = $("fichaModal"), addModal = $("addModal");
+
+  function el(tag, cls, text){
+    var n = document.createElement(tag);
+    if(cls) n.className = cls;
+    if(text != null) n.textContent = text;
+    return n;
+  }
+  function norm(s){ return (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function byId(id){ return BOOKS.filter(function(b){ return b.id === id; })[0]; }
+  function inColl(b, cid){ return !!(b.tags && b.tags.indexOf(cid) !== -1); }
+  function inQueue(b){ return QUEUE_STATES.indexOf(b.state) !== -1; }
+  function shelfOf(b){ return b.loc ? b.loc.split("/")[0] : "sem local"; }
+
+  function markEl(st){ return el("span","mark " + STATES[st].cls); }
+
+  function spineLabel(title, h){
+    var max = Math.max(5, Math.floor(h / 6.8));
+    return title.length > max ? title.slice(0, max - 1) + "…" : title;
+  }
+
+  function shelfList(){
+    var prefixes = SHELVES.map(function(s){ return s.id; });
+    BOOKS.forEach(function(b){
+      if(b.loc){
+        var p = b.loc.split("/")[0];
+        if(prefixes.indexOf(p) === -1) prefixes.push(p);
+      }
+    });
+    return prefixes.map(function(p){
+      var known = SHELVES.filter(function(s){ return s.id === p; })[0];
+      return {id:p, cap: known ? known.cap : 12};
+    });
+  }
+  function booksOn(shelfId){ return BOOKS.filter(function(b){ return shelfOf(b) === shelfId; }); }
+
+  /* a fila é derivada: marcados como próximo sobem,
+     depois planejados, depois desejados. estável dentro de cada grupo. */
+  function queueItems(){
+    return BOOKS.filter(inQueue).sort(function(a, b){
+      if(!!b.pinned !== !!a.pinned) return a.pinned ? -1 : 1;
+      if(a.state !== b.state) return a.state === "planejado" ? -1 : 1;
+      return 0;
+    });
+  }
+
+  function reasonText(b){
+    var base = b.state === "planejado"
+      ? "planejado desde " + b.since
+      : "desejado desde " + b.since;
+    return (b.pinned ? "marcado como próximo · " : "") + base;
+  }
+
+  function cardPasses(b){
+    if(S.collFilter === "loose"){ if(b.loc) return false; }
+    else if(S.collFilter && !inColl(b, S.collFilter)) return false;
+    if(S.query){
+      var t = norm(S.query);
+      if(norm(b.title).indexOf(t) === -1 && norm(b.author || "").indexOf(t) === -1) return false;
+    }
+    return true;
+  }
+
+  /* ================= toast ================= */
+  var toastTimer;
+  function say(html){
+    toast.innerHTML = html;
+    toast.classList.add("is-on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toast.classList.remove("is-on"); }, 4200);
+  }
+
+  /* ================= shelf view ================= */
+  function spineFor(b){
+    var s = el("button","spine" + (b.bare ? " bare" : "") + (S.flashId === b.id ? " flash" : ""));
+    s.type = "button";
+    s.dataset.id = b.id;
+    s.style.height = b.h + "px";
+    s.style.width = b.w + "px";
+    if(b.cloth) s.style.background = b.cloth;
+    s.title = b.title + (b.author ? " — " + b.author : "");
+    s.setAttribute("aria-label", b.title + ", " + STATES[b.state].label);
+    if(!cardPasses(b)) s.classList.add("dim");
+    if(!b.bare){
+      var seal = el("span","spine-seal");
+      seal.appendChild(markEl(b.state));
+      s.appendChild(seal);
+    }
+    s.appendChild(el("span","spine-title", spineLabel(b.title, b.h)));
+    s.addEventListener("click", function(){ openFicha(b.id); });
+    return s;
+  }
+
+  function renderShelf(){
+    var box = $("shelves");
+    box.innerHTML = "";
+    var total = 0;
+
+    shelfList().forEach(function(sh){
+      var items = booksOn(sh.id);
+      if(!items.length) return;
+      total += items.length;
+      var used = items.length;
+
+      var block = el("div","shelf-block" + (sh.id === "sem local" ? " loose" : ""));
+      var head = el("div","shelf-head");
+      head.appendChild(el("h2",null, sh.id));
+      head.appendChild(el("span","cap" + (used >= sh.cap ? " full" : ""),
+        used + " de " + sh.cap + " posições" + (used >= sh.cap ? " — cheia" : "")));
+      block.appendChild(head);
+
+      var bar = el("div","capbar");
+      var fill = el("i" + (used >= sh.cap ? " full" : ""));
+      fill.style.width = Math.min(100, Math.round(used / sh.cap * 100)) + "%";
+      bar.appendChild(fill);
+      block.appendChild(bar);
+
+      var spines = el("div","spines");
+      items.forEach(function(b){ spines.appendChild(spineFor(b)); });
+      block.appendChild(spines);
+
+      var plank = el("div","plank");
+      block.appendChild(plank);
+      box.appendChild(block);
+    });
+
+    var loose = BOOKS.filter(function(b){ return !b.loc; });
+    if(loose.length){
+      total += loose.length;
+      var block = el("div","shelf-block loose");
+      var head = el("div","shelf-head");
+      head.appendChild(el("h2",null,"sem local definido"));
+      head.appendChild(el("span","cap", loose.length + " item" + (loose.length > 1 ? "s" : "") + " — abra a ficha para definir"));
+      block.appendChild(head);
+      var spines = el("div","spines");
+      loose.forEach(function(b){ spines.appendChild(spineFor(b)); });
+      block.appendChild(spines);
+      var plank = el("div","plank");
+      block.appendChild(plank);
+      box.appendChild(block);
+    }
+
+    $("shelfCount").textContent = total + " de " + BOOKS.length + " na vista";
+
+    if(!total){
+      box.appendChild(emptyBlock());
+    }
+  }
+
+  function emptyBlock(){
+    var e = el("div","list-empty");
+    e.appendChild(el("h3",null, S.query ? "Nada encontrado para “" + S.query + "”" : "Nenhum livro passa pelos filtros"));
+    e.appendChild(el("p",null, S.query
+      ? "Tente outro termo ou cadastre o item — só o título já basta."
+      : "Limpe os filtros para ver o acervo inteiro."));
+    var btn = el("button","btn-quiet", S.query ? "cadastrar “" + S.query + "”" : "limpar filtros");
+    btn.type = "button";
+    btn.addEventListener("click", function(){
+      if(S.query) openAdd(S.query);
+      else { S.collFilter = null; S.stateFilter = null; S.query = ""; $("q").value = ""; renderAll(); }
+    });
+    e.appendChild(btn);
+    return e;
+  }
+
+  /* ================= list view ================= */
+  function renderStateChips(){
+    var box = $("stateChips");
+    box.innerHTML = "";
+    var all = el("button","chip" + (!S.stateFilter ? " is-on" : ""), "todos");
+    all.type = "button";
+    all.addEventListener("click", function(){ S.stateFilter = null; renderAll(); });
+    box.appendChild(all);
+    STATE_ORDER.forEach(function(st){
+      var n = BOOKS.filter(function(b){ return b.state === st; }).length;
+      if(!n) return;
+      var b = el("button","chip" + (S.stateFilter === st ? " is-on" : ""));
+      b.type = "button";
+      var d = el("i"); d.style.background = STATES[st].cls === "filled" ? "var(--vermillion)" : "var(--ink-faint)";
+      b.appendChild(d);
+      b.appendChild(document.createTextNode(STATES[st].label + " " + n));
+      b.addEventListener("click", function(){
+        S.stateFilter = (S.stateFilter === st) ? null : st;
+        renderAll();
+      });
+      box.appendChild(b);
+    });
+  }
+
+  function renderList(){
+    var box = $("ltable");
+    box.innerHTML = "";
+    var items = BOOKS.filter(function(b){
+      return cardPasses(b) && (!S.stateFilter || b.state === S.stateFilter);
+    });
+    $("listCount").textContent = items.length + " de " + BOOKS.length;
+
+    var head = el("div","lhead");
+    ["estado","título","autor","local","coleções"].forEach(function(t){ head.appendChild(el("span",null,t)); });
+    box.appendChild(head);
+
+    if(!items.length){
+      box.appendChild(emptyBlock());
+      return;
+    }
+
+    items.forEach(function(b){
+      var r = el("button","lrow" + (S.flashId === b.id ? " flash" : ""));
+      r.type = "button";
+      r.dataset.id = b.id;
+      var st = el("span","cell-state");
+      st.appendChild(markEl(b.state));
+      st.appendChild(el("span",null, STATES[b.state].label));
+      r.appendChild(st);
+      r.appendChild(el("span","cell-title", b.title));
+      r.appendChild(el("span","cell-author", b.author || "—"));
+      r.appendChild(el("span","cell-loc", b.loc || "a definir"));
+      var tags = el("span","cell-tags");
+      if(inQueue(b)) tags.appendChild(el("span","tag q","a seguir"));
+      (b.tags || []).forEach(function(tid){
+        var c = COLLECTIONS.filter(function(x){ return x.id === tid; })[0];
+        if(c) tags.appendChild(el("span","tag", c.name));
+      });
+      r.appendChild(tags);
+      r.addEventListener("click", function(){ openFicha(b.id); });
+      box.appendChild(r);
+    });
+  }
+
+  /* ================= side rail ================= */
+  function renderNext(){
+    var box = $("next");
+    box.innerHTML = "";
+    var items = queueItems().filter(cardPasses);
+    $("nextCount").textContent = items.length + " item" + (items.length === 1 ? "" : "s");
+
+    if(!items.length){
+      var e = el("div","list-empty");
+      e.appendChild(el("h3",null,"a fila está vazia"));
+      e.appendChild(el("p",null,"Nenhum livro em planejado ou desejado. Cadastre algo novo — ele já entra aqui."));
+      box.appendChild(e);
+      return;
+    }
+
+    items.forEach(function(b, i){
+      var row = el("div","qrow" + (i === 0 ? " is-first" : ""));
+      row.dataset.id = b.id;
+      row.appendChild(el("span","q-num", String(i + 1)));
+
+      var sum = el("button","q-sum");
+      sum.type = "button";
+      var title = el("span","q-title", b.title);
+      if(i === 0) title.appendChild(el("span","seal-next is-on","próximo"));
+      sum.appendChild(title);
+      sum.appendChild(el("span","q-author", b.author || "autor não informado"));
+      sum.appendChild(el("span","q-why", reasonText(b)));
+      sum.addEventListener("click", function(){ openFicha(b.id); });
+      row.appendChild(sum);
+
+      var pin = el("button","pin-btn" + (b.pinned ? " is-on" : ""), "próximo");
+      pin.type = "button";
+      pin.title = b.pinned ? "voltar à ordem automática" : "marcar como próximo";
+      pin.setAttribute("aria-label", (b.pinned ? "desmarcar " : "marcar ") + b.title + " como próximo");
+      pin.addEventListener("click", function(){
+        b.pinned = !b.pinned;
+        renderAll();
+        say(b.pinned
+          ? "“" + esc(b.title) + "” marcado como próximo"
+          : "“" + esc(b.title) + "” voltou à ordem automática");
+      });
+      row.appendChild(pin);
+
+      box.appendChild(row);
+    });
+  }
+
+  function renderColls(){
+    var box = $("colls");
+    box.innerHTML = "";
+    var all = el("button","cf" + (!S.collFilter ? " is-on" : ""));
+    all.type = "button";
+    all.appendChild(el("span","rail-mark"));
+    all.appendChild(el("span",null,"todas as coleções"));
+    all.appendChild(el("span","n", String(BOOKS.length)));
+    all.addEventListener("click", function(){ S.collFilter = null; renderAll(); });
+    box.appendChild(all);
+
+    COLLECTIONS.forEach(function(c){
+      var n = BOOKS.filter(function(b){ return inColl(b, c.id); }).length;
+      var b = el("button","cf" + (S.collFilter === c.id ? " is-on" : ""));
+      b.type = "button";
+      b.title = c.note;
+      b.appendChild(el("span","rail-mark"));
+      b.appendChild(el("span",null,c.name));
+      b.appendChild(el("span","n", String(n)));
+      b.addEventListener("click", function(){
+        S.collFilter = (S.collFilter === c.id) ? null : c.id;
+        renderAll();
+      });
+      box.appendChild(b);
+    });
+
+    var loose = BOOKS.filter(function(b){ return !b.loc; }).length;
+    var l = el("button","cf" + (S.collFilter === "loose" ? " is-on" : ""));
+    l.type = "button";
+    l.appendChild(el("span","rail-mark"));
+    l.appendChild(el("span",null,"sem local definido"));
+    l.appendChild(el("span","n", String(loose)));
+    l.addEventListener("click", function(){
+      S.collFilter = (S.collFilter === "loose") ? null : "loose";
+      renderAll();
+    });
+    box.appendChild(l);
+  }
+
+  function suggest(){
+    var pool = BOOKS.filter(function(b){ return b.state === "planejado" && cardPasses(b); });
+    var pick = pool[0] || BOOKS.filter(function(b){ return b.state === "desejado" && cardPasses(b); })[0];
+    if(!pick){ say("Nada a sugerir — a fila está vazia."); return; }
+    pick.pinned = true;
+    renderAll();
+    say("“" + esc(pick.title) + "” é o melhor encaixe — marcado como próximo");
+  }
+
+  /* ================= ficha modal ================= */
+  function cnode(b, st){
+    var btn = el("button","cnode" + (b.state === st ? " is-on" : ""));
+    btn.type = "button";
+    btn.dataset.state = st;
+    btn.appendChild(markEl(st));
+    btn.appendChild(el("span",null, STATES[st].label));
+    btn.addEventListener("click", function(){
+      var was = inQueue(b);
+      b.state = st;
+      var now = inQueue(b);
+      S.flashId = b.id;
+      renderAll();
+      updateCycle(b);
+      flashSoon(b.id);
+      var suffix = "";
+      if(!was && now) suffix = " — <span class='key'>entrou em a seguir</span>";
+      else if(was && !now) suffix = " — <span class='key'>saiu de a seguir</span>";
+      say("“" + esc(b.title) + "” → " + esc(STATES[st].label) + suffix);
+    });
+    return btn;
+  }
+
+  function cycleDiagram(b){
+    var wrap = el("div","cycle");
+    var main = ["desejado","planejado","lendo","concluido"];
+    main.forEach(function(st, i){
+      var cell = el("div","ccell");
+      cell.appendChild(cnode(b, st));
+      if(i < main.length - 1) cell.appendChild(el("span","hlink"));
+      wrap.appendChild(cell);
+    });
+    wrap.appendChild(el("div","ccell"));
+    wrap.appendChild(el("div","ccell"));
+    ["pausado","reler"].forEach(function(st){
+      var cell = el("div","ccell csub");
+      cell.appendChild(el("span","vlink"));
+      cell.appendChild(cnode(b, st));
+      wrap.appendChild(cell);
+    });
+    return wrap;
+  }
+
+  function updateCycle(b){
+    fichaModal.querySelectorAll(".cnode").forEach(function(n){
+      n.classList.toggle("is-on", n.dataset.state === b.state);
+    });
+    var note = fichaModal.querySelector(".ficha-note");
+    if(note) note.innerHTML = queueNote(b);
+    var pinBtn = fichaModal.querySelector(".ficha-actions .btn-quiet");
+    if(pinBtn){
+      if(inQueue(b)){
+        pinBtn.style.display = "";
+        pinBtn.textContent = b.pinned ? "desmarcar como próximo" : "marcar como próximo";
+      } else {
+        pinBtn.style.display = "none";
+      }
+    }
+  }
+
+  function queueNote(b){
+    if(inQueue(b)){
+      return "este livro está em a seguir <span class='key'>automaticamente</span> — basta mudar o estado para sair da fila.";
+    }
+    return "para entrar em a seguir, mude o estado para <span class='key'>planejado</span> ou <span class='key'>desejado</span>.";
+  }
+
+  function openFicha(id){
+    var b = byId(id);
+    if(!b) return;
+    S.openId = id;
+    fichaModal.innerHTML = "";
+
+    var head = el("div","modal-head");
+    var hbox = el("div");
+    hbox.appendChild(el("span","fid", b.id + " · no acervo desde " + b.since));
+    hbox.appendChild(el("h2",null, b.title));
+    head.appendChild(hbox);
+    var x = el("button","x","×"); x.type = "button"; x.setAttribute("aria-label","Fechar ficha");
+    x.addEventListener("click", closeFicha);
+    head.appendChild(x);
+    fichaModal.appendChild(head);
+
+    var body = el("div","modal-body");
+
+    /* o ciclo — o trilho explícito */
+    var fC = el("div","field");
+    fC.appendChild(el("div","cycle-cap","ciclo de leitura"));
+    fC.appendChild(cycleDiagram(b));
+    fC.appendChild(el("span","cycle-note","o ciclo não é uma reta: pausado espera uma condição para voltar, e reler recomeça."));
+    body.appendChild(fC);
+
+    var note = el("p","ficha-note");
+    note.innerHTML = queueNote(b);
+    body.appendChild(note);
+
+    /* título + autor */
+    var g1 = el("div","f-grid");
+    var fT = el("div","field");
+    fT.appendChild(el("label",null,"título"));
+    var iT = el("input"); iT.type = "text"; iT.value = b.title;
+    iT.addEventListener("input", function(){ b.title = iT.value; updateBookViews(b); });
+    fT.appendChild(iT);
+    g1.appendChild(fT);
+    var fA = el("div","field");
+    fA.appendChild(el("label",null,"autor"));
+    var iA = el("input"); iA.type = "text"; iA.value = b.author || ""; iA.placeholder = "não informado";
+    iA.addEventListener("input", function(){ b.author = iA.value; updateBookViews(b); });
+    fA.appendChild(iA);
+    g1.appendChild(fA);
+    body.appendChild(g1);
+
+    /* local + leitura */
+    var g2 = el("div","f-grid");
+    var fL = el("div","field");
+    fL.appendChild(el("label",null,"local"));
+    var iL = el("input"); iL.type = "text"; iL.value = b.loc || ""; iL.placeholder = "a definir";
+    iL.addEventListener("input", function(){ b.loc = iL.value.trim(); updateBookViews(b); });
+    fL.appendChild(iL);
+    fL.appendChild(el("span","hint","formato estante/prateleira/posição — mudar aqui não mexe nada na estante real"));
+    g2.appendChild(fL);
+    var fP = el("div","field");
+    fP.appendChild(el("label",null,"leitura"));
+    var iP = el("input"); iP.type = "text"; iP.value = b.page || ""; iP.placeholder = "ex.: pág. 214";
+    iP.addEventListener("input", function(){ b.page = iP.value.trim(); });
+    fP.appendChild(iP);
+    g2.appendChild(fP);
+    body.appendChild(g2);
+
+    /* coleções */
+    var fTg = el("div","field");
+    fTg.appendChild(el("label",null,"coleções"));
+    var tags = el("div","tagchecks");
+    COLLECTIONS.forEach(function(c){
+      var on = inColl(b, c.id);
+      var lab = el("label", on ? "is-on" : "");
+      var cb = el("input"); cb.type = "checkbox"; cb.checked = on;
+      cb.addEventListener("change", function(){
+        b.tags = b.tags || [];
+        var i = b.tags.indexOf(c.id);
+        if(cb.checked && i === -1) b.tags.push(c.id);
+        if(!cb.checked && i !== -1) b.tags.splice(i,1);
+        lab.classList.toggle("is-on", cb.checked);
+        renderAll();
+      });
+      lab.appendChild(cb);
+      lab.appendChild(document.createTextNode(c.name));
+      tags.appendChild(lab);
+    });
+    fTg.appendChild(tags);
+    body.appendChild(fTg);
+
+    /* observações */
+    var fN = el("div","field");
+    fN.appendChild(el("label",null,"observações"));
+    var iN = el("textarea"); iN.value = b.note || ""; iN.placeholder = "livre";
+    iN.addEventListener("input", function(){ b.note = iN.value; });
+    fN.appendChild(iN);
+    body.appendChild(fN);
+
+    /* próximo */
+    var fQ = el("div","ficha-actions");
+    var pin = el("button","btn-quiet", b.pinned ? "desmarcar como próximo" : "marcar como próximo");
+    pin.type = "button";
+    if(!inQueue(b)) pin.style.display = "none";
+    pin.addEventListener("click", function(){
+      b.pinned = !b.pinned;
+      renderAll();
+      updateCycle(b);
+      say(b.pinned
+        ? "“" + esc(b.title) + "” marcado como próximo"
+        : "“" + esc(b.title) + "” voltou à ordem automática");
+    });
+    fQ.appendChild(pin);
+    body.appendChild(fQ);
+
+    fichaModal.appendChild(body);
+
+    fichaModal.classList.add("is-on");
+    scrim.classList.add("is-on");
+    document.body.style.overflow = "hidden";
+    iT.focus();
+  }
+  function closeFicha(){
+    fichaModal.classList.remove("is-on");
+    scrim.classList.remove("is-on");
+    document.body.style.overflow = "";
+    S.openId = null;
+  }
+
+  /* atualiza lombada e linha da lista sem reconstruir tudo
+     (mantém o foco nos campos de texto da ficha aberta) */
+  function updateBookViews(b){
+    var sp = document.querySelector('.spine[data-id="' + b.id + '"]');
+    if(sp){
+      var t = sp.querySelector(".spine-title");
+      if(t) t.textContent = spineLabel(b.title, b.h);
+      sp.title = b.title + (b.author ? " — " + b.author : "");
+      sp.setAttribute("aria-label", b.title + ", " + STATES[b.state].label);
+    }
+    var row = document.querySelector('.lrow[data-id="' + b.id + '"]');
+    if(row){
+      var ct = row.querySelector(".cell-title"); if(ct) ct.textContent = b.title || "sem título";
+      var ca = row.querySelector(".cell-author"); if(ca) ca.textContent = b.author || "—";
+      var cl = row.querySelector(".cell-loc"); if(cl) cl.textContent = b.loc || "a definir";
+    }
+    var why = document.querySelector('.qrow[data-id="' + b.id + '"] .q-why');
+    if(why) why.textContent = reasonText(b);
+  }
+
+  function flashSoon(id){
+    setTimeout(function(){
+      S.flashId = null;
+      document.querySelectorAll(".flash").forEach(function(n){ n.classList.remove("flash"); });
+    }, 1300);
+  }
+
+  /* ================= add ================= */
+  function openAdd(prefill){
+    $("nTitle").value = prefill || "";
+    $("nAuthor").value = "";
+    $("nLoc").value = "";
+    addModal.classList.add("is-on");
+    scrim.classList.add("is-on");
+    document.body.style.overflow = "hidden";
+    setTimeout(function(){ $("nTitle").focus(); }, 60);
+  }
+  function closeAdd(){
+    addModal.classList.remove("is-on");
+    if(!fichaModal.classList.contains("is-on")){
+      scrim.classList.remove("is-on");
+      document.body.style.overflow = "";
+    }
+  }
+  function saveNew(){
+    var title = $("nTitle").value.trim();
+    if(!title){ $("nTitle").focus(); return; }
+    var id = "BK-0" + String(BOOKS.length + 1).padStart(2,"0");
+    BOOKS.push({
+      id:id, title:title,
+      author: $("nAuthor").value.trim(),
+      state:"desejado",
+      loc: $("nLoc").value.trim(),
+      cloth: $("nAuthor").value.trim() ? "#5C5148" : null,
+      bare: !$("nAuthor").value.trim(),
+      h:148, w:30,
+      tags:[], since:"hoje", page:"", note:""
+    });
+    closeAdd();
+    S.flashId = id;
+    renderAll();
+    flashSoon(id);
+    say("Cadastrado. <span class='key'>Já está em a seguir</span> como desejado — complete a ficha quando fizer sentido.");
+    openFicha(id);
+  }
+
+  /* ================= events ================= */
+  $("q").addEventListener("input", function(){
+    S.query = $("q").value.trim();
+    renderAll();
+  });
+  document.querySelectorAll(".vt button").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      S.view = btn.dataset.view;
+      document.querySelectorAll(".vt button").forEach(function(x){
+        x.classList.toggle("is-on", x === btn);
+      });
+      $("content").classList.toggle("show-list", S.view === "list");
+    });
+  });
+  $("addBtn").addEventListener("click", function(){ openAdd(); });
+  $("nCancel").addEventListener("click", closeAdd);
+  $("nSave").addEventListener("click", saveNew);
+  $("nTitle").addEventListener("keydown", function(e){ if(e.key === "Enter") saveNew(); });
+  $("suggestBtn").addEventListener("click", suggest);
+  scrim.addEventListener("click", function(){
+    if(addModal.classList.contains("is-on")) closeAdd();
+    else if(fichaModal.classList.contains("is-on")) closeFicha();
+  });
+  document.addEventListener("keydown", function(e){
+    var tag = document.activeElement && document.activeElement.tagName;
+    var typing = /input|textarea/i.test(tag || "");
+    if(e.key === "Escape"){
+      if(addModal.classList.contains("is-on")) closeAdd();
+      else if(fichaModal.classList.contains("is-on")) closeFicha();
+      return;
+    }
+    if(e.key === "/" && !typing){
+      e.preventDefault();
+      $("q").focus();
+    }
+  });
+
+  /* ================= boot ================= */
+  function renderAll(){
+    renderShelf();
+    renderStateChips();
+    renderList();
+    renderNext();
+    renderColls();
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>
